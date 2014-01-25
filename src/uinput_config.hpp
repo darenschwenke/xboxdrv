@@ -21,6 +21,7 @@
 
 #include "axis_map.hpp"
 #include "button_map.hpp"
+#include "rtmidi.hpp"
 
 struct Xbox360Msg;
 struct XboxGenericMsg;
@@ -36,8 +37,11 @@ private:
 
   ButtonMap m_btn_map;
   AxisMap   m_axis_map;
+  std::vector<unsigned char> rtmidi_message;
 
   int  axis_state[XBOX_AXIS_MAX];
+  int  axis_last_state[XBOX_AXIS_MAX];
+  int  axis_rising[XBOX_AXIS_MAX];
   bool button_state[XBOX_BTN_MAX];
   bool last_button_state[XBOX_BTN_MAX];
 
@@ -56,7 +60,7 @@ private:
 
   void send_button(XboxButton code, bool value);
   void send_axis(XboxAxis code, int32_t value);
-
+  RtMidiOut* get_rtmidi();
 private:
   UInputConfig(const UInputConfig&);
   UInputConfig& operator=(const UInputConfig&);

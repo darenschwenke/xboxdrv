@@ -17,6 +17,7 @@
 */
 
 #include "uinput.hpp"
+#include "rtmidi.hpp"
 
 #include <boost/tokenizer.hpp>
 #include <iostream>
@@ -524,7 +525,16 @@ UInput::set_device_names(const std::map<uint32_t, std::string>& device_names)
 {
   m_device_names = device_names;
 }
-
+void
+UInput::set_rtmidi(RtMidiOut* rtmidi)
+{
+  m_rtmidi = rtmidi;
+}
+RtMidiOut*
+UInput::get_rtmidi()
+{
+	return m_rtmidi;
+}
 void
 UInput::set_ff_callback(int device_id, const boost::function<void (uint8_t, uint8_t)>& callback)
 {

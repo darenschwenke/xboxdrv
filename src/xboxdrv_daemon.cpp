@@ -27,6 +27,7 @@
 #include <dbus/dbus.h>
 #include <errno.h>
 
+#include "rtmidi.hpp"
 #include "helper.hpp"
 #include "raise_exception.hpp"
 #include "select.hpp"
@@ -102,7 +103,8 @@ XboxdrvDaemon::XboxdrvDaemon(const Options& opts) :
   m_gmain(),
   m_controller_slots(),
   m_inactive_controllers(),
-  m_uinput()
+  m_uinput(),
+  m_rtmidi()
 {
   assert(!s_current);
   s_current = this;
@@ -254,7 +256,9 @@ XboxdrvDaemon::init_uinput()
 
     m_uinput.reset(new UInput(m_opts.extra_events));
     m_uinput->set_device_names(m_opts.uinput_device_names);
-
+	m_rtmidi = new RtMidiOut();
+	m_rtmidi->openVirtualPort("xboxdrv midi out");
+	m_uinput->set_rtmidi(m_rtmidi);
     // create controller slots
     int slot_count = 0;
 
@@ -281,7 +285,6 @@ XboxdrvDaemon::init_uinput()
     m_uinput->finish();
   }
 }
-
 void
 XboxdrvDaemon::create_pid_file()
 {
@@ -599,6 +602,8 @@ XboxdrvDaemon::status()
 void
 XboxdrvDaemon::shutdown()
 {
+  m_rtmidi->closePort();
+  delete m_rtmidi;
   for(ControllerSlots::iterator i = m_controller_slots.begin(); i != m_controller_slots.end(); ++i)
   {
     if ((*i)->get_controller() && 
@@ -607,7 +612,6 @@ XboxdrvDaemon::shutdown()
       (*i)->get_controller()->set_led(0);
     }
   }
-  
   // give the LED message a few msec to reach the controller
   g_usleep(10 * 1000); // FIXME: what is a good time to wait?
 

@@ -30,6 +30,7 @@
 class MessageProcessor;
 class Options;
 class UInput;
+class RtMidiOut;
 class USBGSource;
 
 class XboxdrvMain
@@ -46,6 +47,7 @@ private:
   boost::scoped_ptr<USBGSource> m_usb_gsource;
 
   std::auto_ptr<UInput> m_uinput;
+  RtMidiOut* m_rtmidi;
 
   int m_jsdev_number;
   int m_evdev_number;

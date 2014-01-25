@@ -20,6 +20,7 @@
 
 #include "helper.hpp"
 #include "uinput.hpp"
+#include "rtmidi.hpp"
 #include "uinput_options.hpp"
 
 namespace {
@@ -44,13 +45,21 @@ UInputConfig::UInputConfig(UInput& uinput, int slot, bool extra_devices, const U
   m_axis_map(opts.get_axis_map())
 {
   std::fill_n(axis_state,   static_cast<int>(XBOX_AXIS_MAX), 0);
+  std::fill_n(axis_last_state,   static_cast<int>(XBOX_AXIS_MAX), 0);
+  std::fill_n(axis_rising,   static_cast<int>(XBOX_AXIS_MAX), 0);
   std::fill_n(button_state,      static_cast<int>(XBOX_BTN_MAX),  false);
   std::fill_n(last_button_state, static_cast<int>(XBOX_BTN_MAX),  false);
+  rtmidi_message.push_back( 0 );
+  rtmidi_message.push_back( 0 );
+  rtmidi_message.push_back( 0 );
 
   m_btn_map.init(uinput, slot, extra_devices);
   m_axis_map.init(uinput, slot, extra_devices);
 }
-
+RtMidiOut*
+UInputConfig::get_rtmidi() {
+	return m_uinput.get_rtmidi();
+}
 void
 UInputConfig::send(XboxGenericMsg& msg)
 {
@@ -302,6 +311,17 @@ UInputConfig::send_button(XboxButton code, bool value)
 
     // Non shifted button events
     m_btn_map.send(m_uinput, code, value);
+    if ( value ) {
+    	rtmidi_message[0] = 159;
+    	rtmidi_message[1] = 36 + code;
+    	rtmidi_message[2] = 90;
+    	get_rtmidi()->sendMessage(&rtmidi_message);
+    } else {
+    	rtmidi_message[0] = 143;
+    	rtmidi_message[1] = 36 + code;
+    	rtmidi_message[2] = 90;
+    	get_rtmidi()->sendMessage(&rtmidi_message);
+    }
   }
 }
 
@@ -356,11 +376,26 @@ UInputConfig::send_axis(XboxAxis code, int32_t value)
   }
   else
   {
-    // no shift was touched, so only send events when the value changed
-    if (axis_state[code] != value)
-    {
-      if (ev) ev->send(m_uinput, value);
-    }
+	  // no shift was touched, so only send events when the value changed
+	  if (axis_state[code] != value)
+	  {
+		  if (ev) ev->send(m_uinput, value);
+		  if ( axis_state[code] == 0 ) {
+			  rtmidi_message[0] = 158;
+			  rtmidi_message[1] = 36 + code;
+			  rtmidi_message[2] = 90;
+			  get_rtmidi()->sendMessage(&rtmidi_message);
+		  } else if (value == 0) {
+			  rtmidi_message[0] = 142;
+			  rtmidi_message[1] = 36 + code;
+			  rtmidi_message[2] = 90;
+			  get_rtmidi()->sendMessage(&rtmidi_message);
+		  }
+		  rtmidi_message[0] = 174;
+		  rtmidi_message[1] = 36 + code;
+		  rtmidi_message[2] = value / 2;
+		  get_rtmidi()->sendMessage(&rtmidi_message);
+	  }
   }
 
   // save current value

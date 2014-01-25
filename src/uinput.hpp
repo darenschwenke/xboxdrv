@@ -23,6 +23,7 @@
 #include <map>
 
 #include "axis_event.hpp"
+#include "rtmidi.hpp"
 #include "linux_uinput.hpp"
 #include "ui_event_emitter.hpp"
 #include "ui_event_collector.hpp"
@@ -80,6 +81,7 @@ private:
 
   guint m_timeout_id;
   GTimer* m_timer;
+  RtMidiOut* m_rtmidi;
 
 public:
   UInput(bool extra_events);
@@ -92,6 +94,8 @@ public:
   static int  find_evdev_number();
 
   void set_device_names(const std::map<uint32_t, std::string>& device_names);
+  void set_rtmidi(RtMidiOut* rtmidi);
+  RtMidiOut* get_rtmidi();
   void set_device_usbids(const std::map<uint32_t, struct input_id>& device_usbids);
   void set_ff_callback(int device_id, const boost::function<void (uint8_t, uint8_t)>& callback);
 

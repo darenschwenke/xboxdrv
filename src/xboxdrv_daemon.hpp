@@ -31,6 +31,7 @@ extern "C" {
 
 class Options;
 class UInput;
+class RtMidiOut;
 class USBGSource;
 struct XPadDevice;
 
@@ -50,6 +51,7 @@ private:
   Controllers m_inactive_controllers;
 
   std::auto_ptr<UInput> m_uinput;
+  RtMidiOut* m_rtmidi;
   
 private:
   static void on_sigint(int);

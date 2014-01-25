@@ -26,6 +26,7 @@
 #include <boost/format.hpp>
 #include <boost/bind.hpp>
 
+#include "rtmidi.hpp"
 #include "controller_factory.hpp"
 #include "evdev_controller.hpp"
 #include "message_processor.hpp"
@@ -47,6 +48,7 @@ XboxdrvMain::XboxdrvMain(const Options& opts) :
   m_gmain(),
   m_usb_gsource(),
   m_uinput(),
+  m_rtmidi(),
   m_jsdev_number(),
   m_evdev_number(),
   m_use_libusb(false),
@@ -170,6 +172,9 @@ XboxdrvMain::run()
       log_debug("creating UInput");
       m_uinput.reset(new UInput(m_opts.extra_events));
       m_uinput->set_device_names(m_opts.uinput_device_names);
+  	  m_rtmidi = new RtMidiOut();
+  	  m_rtmidi->openVirtualPort("xboxdrv midi out");
+  	  m_uinput->set_rtmidi(m_rtmidi);
       m_uinput->set_device_usbids(m_opts.uinput_device_usbids);
 
       log_debug("creating ControllerSlotConfig");
@@ -259,7 +264,8 @@ void
 XboxdrvMain::shutdown()
 {
   log_info("shutdown requested");
-
+  m_rtmidi->closePort();
+  delete m_rtmidi;
   if (!m_controller->is_disconnected())
   {
     m_controller->set_led(0);

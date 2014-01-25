@@ -20,6 +20,7 @@
 #define HEADER_XBOXDRV_CONTROLLER_CONFIG_HPP
 
 #include "uinput_config.hpp"
+#include "rtmidi.hpp"
 #include "modifier.hpp"
 
 class ControllerOptions;
@@ -33,7 +34,7 @@ private:
   UInputConfig m_uinput;
 
 public:
-  ControllerConfig(UInput& uinput, int slot, bool extra_devices, 
+  ControllerConfig(UInput& uinput, int slot, bool extra_devices,
                    const ControllerOptions& opts);
 
   std::vector<ModifierPtr>& get_modifier();
